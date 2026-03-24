@@ -22,7 +22,7 @@ This project is an AI-powered Data Analyst Chatbot that allows users to upload C
 - SQL Database
 - Machine learning
 
-🎥  Demo : Sample Data
+🎥 DEMO : Sample Data
 
 Download the sample dataset and test the project:
 👉 [Download Sample CSV](sample_data.csv)
