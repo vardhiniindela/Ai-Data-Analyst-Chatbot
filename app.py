@@ -1,6 +1,21 @@
+from sklearn.linear_model import LinearRegression
+import numpy as np
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import sqlite3
+
+conn = sqlite3.connect("data.db")
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS queries (
+    question TEXT,
+    answer TEXT
+)
+""")
+conn.commit()
+
 
 st.set_page_config(page_title="AI Data Chatbot", layout="wide")
 
@@ -60,13 +75,16 @@ else:
             response = "Try: total sales, average price, highest product"
 
         st.session_state["chat"].append((query, response))
+        cursor.execute("INSERT INTO queries VALUES (?, ?)", (query, response))
+        conn.commit()
 
     # Display chat
+    st.subheader("💬 Chat History")
     for q, r in st.session_state["chat"]:
-        st.markdown(f"**You:** {q}")
-        st.markdown(f"**Bot:** {r}")
+     st.markdown(f"🧑‍💻 **You:** {q}")
+     st.markdown(f"🤖 **Bot:** {r}")
+     st.markdown("---") 
 
-    st.markdown("---")
 
     # Insights
     st.subheader("📊 Insights")
@@ -76,13 +94,30 @@ else:
     # Graph
     st.subheader("📊 Visualization")
 
-    fig, ax = plt.subplots(figsize=(4,3.5))
-    ax.bar(df["product"], df["price"])
-    ax.set_title("Product vs Price")
+    chart_type = st.selectbox("Choose Chart", ["Bar", "Line", "Pie"])
 
-    st.pyplot(fig, use_container_width=False)
+    fig, ax = plt.subplots(figsize=(4,2.5))
 
+    if chart_type == "Bar":
+       ax.bar(df["product"], df["price"])
+    elif chart_type == "Line":
+       ax.plot(df["product"], df["price"])
+    elif chart_type == "Pie":
+       ax.pie(df["price"], labels=df["product"], autopct="%1.1f%%")
 
+    st.pyplot(fig)
+    st.subheader("📈 Simple Prediction")
+
+    X = np.array(range(len(df))).reshape(-1,1)
+    y = df["price"].values
+
+    model = LinearRegression()
+    model.fit(X, y)
+
+    future = np.array([[len(df)+1]])
+    prediction = model.predict(future)
+
+    st.write(f"Next predicted value: {round(prediction[0],2)}")
 
     st.markdown("---")
     st.markdown("👨‍💻 Developed by Vardhini | AI Chatbot Project")
